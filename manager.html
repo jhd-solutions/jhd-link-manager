@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>JHD Link Manager — Liens actifs</title>
+  <style>
+    :root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:#0e1422;color:#f3f7ff}
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(circle at 75% -20%,#26466a 0,transparent 55%),#0e1422;min-height:100vh}
+    .page{max-width:1050px;margin:auto;padding:36px 24px 70px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+    .brand{font-weight:750;color:#d7eaff;letter-spacing:.05em;font-size:15px}
+    .brand span{color:#b6c2d2;font-weight:400}
+    .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9dbbda;margin-top:58px}
+    h1{font-size:clamp(30px,5vw,48px);letter-spacing:-.04em;margin:8px 0 12px}
+    .intro{color:#b1c1d6;max-width:720px;line-height:1.65}
+    .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:23px}
+    a.button,button{border:1px solid #546985;border-radius:10px;background:#213b5e;color:white;font-weight:650;font-size:14px;padding:12px 16px;text-decoration:none;cursor:pointer}
+    a.button.main{background:#4984c5;border-color:#4984c5;color:#091b31}
+    a.button:hover,button:hover{filter:brightness(1.15)}
+    a{color:#83bbfa}
+    .panel{margin-top:35px;background:#162238;border:1px solid #314664;border-radius:16px;padding:24px}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+    .header h2{margin:0;font-size:22px}
+    #filter{background:#0d1828;border:1px solid #456082;color:white;font:inherit;border-radius:10px;padding:11px 13px;width:min(100%,310px)}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:17px 0;border-top:1px solid #30425a;flex-wrap:wrap}
+    .row h3{font-size:17px;margin:0 0 5px}
+    .row p{margin:0;color:#a9bed5;font-size:13px;overflow-wrap:anywhere}
+    .row .url{font-size:14px;color:#b6d8ff;margin-bottom:5px}
+    .row .right{display:flex;gap:8px}
+    .small{color:#8fa5c1;font-size:13px;line-height:1.6}
+    #status{color:#bfcee2}
+    .notice{margin-top:26px;padding:18px;background:#12253b;border-left:3px solid #7caee5;border-radius:6px;color:#bbcee0;line-height:1.6}
+    @media(max-width:540px){.page{padding:20px 14px 45px}.panel{padding:17px}.row .right{width:100%}.row button,.row .button{flex:1;text-align:center}}
+  </style>
+</head>
+<body>
+<main class="page">
+  <header class="top"><div class="brand">◈ &nbsp;JHD <span>SOLUTIONS</span></div><div class="small">Gestionnaire de redirections · v1.1</div></header>
+  <div class="eyebrow">Outils JHD Solutions</div>
+  <h1>Link Manager</h1>
+  <p class="intro">Consulte les liens courts, copie les adresses et retrouve leur destination. Pour en créer, les modifier ou les désactiver, utilise le formulaire sécurisé sur GitHub.</p>
+  <div class="actions">
+    <a class="button main" href="https://github.com/jhd-solutions/jhd-link-manager/actions/workflows/manage.yml" target="_blank" rel="noopener noreferrer">+ Créer ou modifier un lien ↗</a>
+    <a class="button" href="https://github.com/jhd-solutions/jhd-link-manager/blob/main/links.json" target="_blank" rel="noopener noreferrer">Voir la configuration ↗</a>
+  </div>
+  <section class="panel">
+    <div class="header"><div><h2>Liens publiés</h2><div class="small" id="count">Chargement…</div></div><input id="filter" type="search" placeholder="Rechercher un code ou un titre…" aria-label="Rechercher les liens"></div>
+    <p id="status" role="status" aria-live="polite">Lecture des liens…</p>
+    <div id="items"></div>
+  </section>
+  <div class="notice">
+    <strong>Gestion et confidentialité.</strong> Ce tableau de consultation est public : les alias et les adresses de destination ne sont pas secrets. Seuls les utilisateurs disposant des droits GitHub peuvent modifier les liens. Aucun jeton d'accès n'est demandé sur cette page.
+  </div>
+</main>
+<script>
+"use strict";
+const items = document.getElementById("items");
+const statusEl = document.getElementById("status");
+const countEl = document.getElementById("count");
+const search = document.getElementById("filter");
+let all = [];
+const base = new URL("../", location.href);
+function el(tag,text,cls){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node}
+function render(){
+ const q=search.value.toLowerCase().trim();
+ const filtered=all.filter(x=>[x.alias,x.title,x.destination].some(t=>t.toLowerCase().includes(q)));
+ items.replaceChildren();
+ countEl.textContent=all.length+" lien(s) actif(s)";
+ if(!filtered.length){statusEl.textContent="Aucun lien correspondant.";return;}
+ statusEl.textContent="";
+ for(const link of filtered){
+   const row=el("article",undefined,"row"),info=el("div"),heading=el("h3",link.title);
+   const shortUrl = new URL(encodeURIComponent(link.alias)+"/",base).href;
+   info.append(heading,el("p",shortUrl,"url"),el("p","Destination : "+link.destination));
+   const controls=el("div",undefined,"right");
+   const copy=el("button","Copier le lien");
+   copy.type="button";
+   copy.addEventListener("click",async()=>{
+     try{await navigator.clipboard.writeText(shortUrl);copy.textContent="Copié ✓";setTimeout(()=>{copy.textContent="Copier le lien"},1800)}
+     catch(e){window.prompt("Copie ce lien :",shortUrl)}
+   });
+   const open=el("a","Tester ↗","button");
+   open.href=shortUrl;open.target="_blank";open.rel="noopener noreferrer";
+   controls.append(copy,open);row.append(info,controls);items.append(row);
+ }
+}
+search.addEventListener("input",render);
+fetch(new URL("../links.json",location.href),{cache:"no-cache"})
+  .then(r=>{if(!r.ok)throw new Error("Lecture impossible");return r.json()})
+  .then(data=>{all=Object.entries(data).map(([alias,v])=>({alias,title:typeof v==="string"?alias:(v.title||alias),destination:typeof v==="string"?v:v.destination}));all.sort((a,b)=>a.alias.localeCompare(b.alias));render()})
+  .catch(()=>{statusEl.textContent="Impossible de récupérer les liens publiés. Vérifie le dernier déploiement GitHub Pages.";countEl.textContent="Non disponible"});
+</script>
+</body>
+</html>

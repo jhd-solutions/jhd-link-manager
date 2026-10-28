@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 
 BASE = Path(__file__).parent
 OUTPUT = BASE / "_site"
-RESERVED = {"index", "404", "assets", "admin", "links", "api", "robots", "favicon", "about", "privacy"}
+RESERVED = {"index", "404", "assets", "admin", "links", "api", "robots", "favicon", "about", "privacy", "manager"}
 
 
 def validate_alias(alias: str) -> None:
@@ -71,8 +71,11 @@ def main() -> None:
         shutil.rmtree(OUTPUT)
     OUTPUT.mkdir(parents=True)
     (OUTPUT / ".nojekyll").write_text("", encoding="utf-8")
-    (OUTPUT / "index.html").write_text('''<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>JHD Link Manager</title><style>body{font:16px/1.6 system-ui,sans-serif;max-width:40rem;margin:14vh auto;padding:0 1.2rem;color:#26344c}h1{color:#1553a8}</style></head><body><h1>JHD Link Manager</h1><p>Service de redirection géré par JHD Solutions.</p><p>Pour accéder à un lien court, utilisez son adresse complète, avec son code final.</p></body></html>''', encoding="utf-8")
+    (OUTPUT / "index.html").write_text('''<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>JHD Link Manager</title><style>body{font:16px/1.6 system-ui,sans-serif;max-width:40rem;margin:14vh auto;padding:0 1.2rem;color:#26344c}h1{color:#1553a8}</style></head><body><h1>JHD Link Manager</h1><p>Service de redirection géré par JHD Solutions.</p><p>Pour accéder à un lien court, utilisez son adresse complète, avec son code final.</p><p><a href="./manager/">Consulter les liens publiés</a></p></body></html>''', encoding="utf-8")
     (OUTPUT / "404.html").write_text('''<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Lien introuvable</title></head><body style="font:16px system-ui;max-width:35rem;margin:15vh auto;padding:1rem"><h1>Lien introuvable</h1><p>Ce lien court n'existe pas ou n'est plus actif.</p></body></html>''', encoding="utf-8")
+    shutil.copyfile(BASE / "links.json", OUTPUT / "links.json")
+    (OUTPUT / "manager").mkdir()
+    shutil.copyfile(BASE / "manager.html", OUTPUT / "manager" / "index.html")
     for alias, record in data.items():
         destination = record if isinstance(record, str) else record["destination"]
         name = alias if isinstance(record, str) else record.get("title", alias)

@@ -2,5 +2,9 @@
   "demo": {
     "destination": "https://example.org/",
     "title": "Lien de démonstration"
+  },
+  "b26": {
+    "destination": "https://www.gaelle-accompagnante-parentale.fr/",
+    "title": "Salon Baby 2026 — accueil Gaëlle (destination provisoire)"
   }
 }

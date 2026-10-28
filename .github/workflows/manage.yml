@@ -1,0 +1,75 @@
+name: Gerer les liens JHD
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Action à effectuer'
+        required: true
+        type: choice
+        options:
+          - set
+          - delete
+        default: set
+      alias:
+        description: 'Code court (ex : b26)'
+        required: true
+        type: string
+      destination:
+        description: 'URL cible (obligatoire pour set)'
+        required: false
+        type: string
+      title:
+        description: 'Description facultative du lien'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  edit-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Appliquer la modification
+        env:
+          LINK_ACTION: ${{ inputs.operation }}
+          LINK_ALIAS: ${{ inputs.alias }}
+          LINK_DESTINATION: ${{ inputs.destination }}
+          LINK_TITLE: ${{ inputs.title }}
+        run: python manage_links.py
+      - name: Enregistrer dans GitHub
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add links.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Mettre à jour les liens JHD"
+            git push origin HEAD:main
+          fi
+      - name: Générer les redirections
+        run: python build.py
+      - name: Configurer GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Envoyer le site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - name: Publier
+        uses: actions/deploy-pages@v4
+        id: deployment

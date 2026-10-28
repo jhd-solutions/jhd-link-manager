@@ -31,10 +31,11 @@ def main() -> None:
         validate_url(destination)
         if title and len(title) > 120:
             raise ValueError("Le titre est limite a 120 caracteres.")
+        existed = alias in data
         old = data.get(alias, {})
         old_title = old.get("title", alias) if isinstance(old, dict) else alias
         data[alias] = {"destination": destination, "title": title or old_title}
-        print(("Lien mis a jour" if alias in old else "Lien cree") + " : " + alias)
+        print(("Lien mis a jour" if existed else "Lien cree") + " : " + alias)
     LINKS.write_text(
         json.dumps(dict(sorted(data.items())), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",

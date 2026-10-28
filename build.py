@@ -25,8 +25,10 @@ def validate_url(value: str) -> None:
     parsed = urlsplit(value)
     if parsed.scheme not in {"https", "http"} or not parsed.netloc or parsed.username or parsed.password:
         raise ValueError(f"URL de destination non acceptée: {value!r}")
-    if any(ord(x) < 32 for x in value):
-        raise ValueError("URL contenant un caractère de contrôle")
+    if any(ch.isspace() for ch in value):
+        raise ValueError("Une URL contenant des espaces ou des retours à la ligne ne convient pas à Cloudflare Pages")
+    if len(value) > 930:
+        raise ValueError("URL trop longue pour une règle de redirection Cloudflare Pages")
 
 
 def make_redirect(destination: str, name: str) -> str:
@@ -76,6 +78,18 @@ def main() -> None:
     shutil.copyfile(BASE / "links.json", OUTPUT / "links.json")
     (OUTPUT / "manager").mkdir()
     shutil.copyfile(BASE / "manager.html", OUTPUT / "manager" / "index.html")
+    # Cloudflare Pages : règles HTTP 302, plus robustes que les pages de
+    # redirection HTML (GitHub Pages continue d'utiliser les pages HTML).
+    # Les deux formes /b26 et /b26/ sont prises en charge.
+    redirects = ["# Redirections HTTP 302 - JHD Link Manager, générées automatiquement"]
+    for alias, record in data.items():
+        destination = record if isinstance(record, str) else record["destination"]
+        redirects.extend((f"/{alias} {destination} 302",
+                          f"/{alias}/ {destination} 302"))
+    if len(data) > 1000:
+        raise ValueError("Au-delà de 1000 alias, la limite de 2000 redirections Cloudflare est dépassée")
+    (OUTPUT / "_redirects").write_text("\n".join(redirects)+"\n", encoding="utf-8")
+
     for alias, record in data.items():
         destination = record if isinstance(record, str) else record["destination"]
         name = alias if isinstance(record, str) else record.get("title", alias)

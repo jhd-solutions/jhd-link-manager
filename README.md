@@ -1,6 +1,13 @@
-# JHD Link Manager — v1.0
+# JHD Link Manager — v1.2
 
 Gestionnaire de liens courts pour JHD Solutions. Un fichier JSON décrit les liens ; GitHub Actions construit des pages HTML de redirection. Ce dépôt est indépendant du site BabyShow.
+
+
+## Cloudflare Pages — URL gratuite plus courte
+
+La configuration Cloudflare Pages est détaillée dans **[CLOUDFLARE.md](CLOUDFLARE.md)**. Le dépôt peut être publié sur GitHub Pages **et** Cloudflare Pages, avec **la même source de liens**.
+
+Sur Cloudflare, `python3 build.py` crée aussi `_site/_redirects`, qui effectue des **redirections HTTP 302 directement sur le serveur**, alors que GitHub Pages utilise la redirection HTML. Choisir un nom de projet court (par exemple `jhdgo` s'il est libre) et le répertoire de sortie `_site`.
 
 ## Installation
 1. Dans **Settings → Pages → Build and deployment → Source**, sélectionner **GitHub Actions**.
